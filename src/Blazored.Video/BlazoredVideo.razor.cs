@@ -42,7 +42,9 @@ namespace Blazored.Video
 		/// </summary>
 		[Parameter] public Dictionary<VideoEvents, VideoStateOptions> VideoEventOptions { get; set; }
 
-		public string UniqueKey { get; private set; } = Guid.NewGuid().ToString("N");
+        public Func<Task> AfterInitAsync { get; set; }
+
+        public string UniqueKey { get; private set; } = Guid.NewGuid().ToString("N");
 #pragma warning disable CS0649
 #pragma warning disable CS0414
 		protected ElementReference videoRef;
@@ -58,19 +60,27 @@ namespace Blazored.Video
 			{
 				UniqueKey = Id.ToString();
 			}
+			
 		}
 
-		protected override async Task OnAfterRenderAsync(bool firstRender)
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
 		{
-			await base.OnAfterRenderAsync(firstRender);
 			if (firstRender)
 			{
 				await ImportJavaScript();
 				await ConfigureEvents();
-			}
+
+                if (AfterInitAsync != null)
+                    await AfterInitAsync();
+            }
+			await base.OnAfterRenderAsync(firstRender);
 		}
 
-		private async Task ImportJavaScript() => jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/Blazored.Video/blazoredVideo.js");
+
+
+		private async Task ImportJavaScript() => 
+			jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/Blazored.Video/blazoredVideo.js");
 
 		protected virtual async Task ConfigureEvents()
 		{
@@ -199,7 +209,10 @@ namespace Blazored.Video
 			{
 				videoData = JsonSerializer.Deserialize<VideoEventData>(ThisEvent, serializationOptions);
 				videoData.Video = this;
-				videoData.State.Video = this;
+				if (videoData.State != null)
+				{
+					videoData.State.Video = this;
+				}
 			}
 			catch (Exception ex)
 			{
