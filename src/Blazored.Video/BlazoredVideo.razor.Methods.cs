@@ -233,6 +233,7 @@ namespace Blazored.Video
 
 		protected virtual ValueTask<T> GetValueAsync<T>([CallerMemberName] string name = null)
 		{
+			if (jsModule == null) return default;
 			var payloadName = VideoStateOptionsExt.FormatGetSetAsyncAsPayload(name);
 			if (jsModule is IJSInProcessObjectReference inProcessModule)
 			{
