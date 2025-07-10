@@ -42,9 +42,12 @@ namespace Blazored.Video
 		/// </summary>
 		[Parameter] public Dictionary<VideoEvents, VideoStateOptions> VideoEventOptions { get; set; }
 
+		[Parameter] public EventCallback FirstRenderCompleted { get; set; }
         public Func<Task> AfterInitAsync { get; set; }
 
-        public string UniqueKey { get; private set; } = Guid.NewGuid().ToString("N");
+		public bool IsFirstRender { get; private set; } = false;
+
+		public string UniqueKey { get; private set; } = Guid.NewGuid().ToString("N");
 #pragma warning disable CS0649
 #pragma warning disable CS0414
 		protected ElementReference videoRef;
@@ -66,15 +69,21 @@ namespace Blazored.Video
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
 		{
+			await base.OnAfterRenderAsync(firstRender);
+
 			if (firstRender)
 			{
 				await ImportJavaScript();
 				await ConfigureEvents();
 
-                if (AfterInitAsync != null)
+				IsFirstRender = true;
+
+				if (AfterInitAsync != null)
                     await AfterInitAsync();
+
+				if (FirstRenderCompleted.HasDelegate)
+					await FirstRenderCompleted.InvokeAsync();
             }
-			await base.OnAfterRenderAsync(firstRender);
 		}
 
 
