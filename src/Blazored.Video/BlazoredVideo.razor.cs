@@ -43,7 +43,10 @@ namespace Blazored.Video
 		[Parameter] public Dictionary<VideoEvents, VideoStateOptions> VideoEventOptions { get; set; }
 
 		[Parameter] public EventCallback FirstRenderCompleted { get; set; }
-        public Func<Task> AfterInitAsync { get; set; }
+
+		[Parameter] public double DefaultVolume { get; set; } = 1.0;
+
+		public Func<Task> AfterInitAsync { get; set; }
 
 		public bool IsFirstRender { get; private set; } = false;
 
@@ -83,7 +86,14 @@ namespace Blazored.Video
 
 				if (FirstRenderCompleted.HasDelegate)
 					await FirstRenderCompleted.InvokeAsync();
-            }
+
+				//if (jsModule is IJSInProcessObjectReference inProcessModule)
+				//	this.Volume = this.DefaultVolume;
+				//else
+				await SetVolumeAsync(this.DefaultVolume);
+
+				await InvokeAsync(StateHasChanged);
+			}
 		}
 
 
@@ -197,11 +207,11 @@ namespace Blazored.Video
 			{
 				await jsModule.InvokeVoidAsync("registerCustomEventHandler", videoRef, eventName.ToString().ToLower(), options.GetPayload());
 			}
-      catch (Exception ex)
-      {
+			catch (Exception ex)
+			{
 				LoggerFactory
 					.CreateLogger(nameof(BlazoredVideo))
-          .LogError(ex, "Failed to register an event handler for {0}", eventName);
+					.LogError(ex, "Failed to register an event handler for {0}", eventName);
 			}
 		}
 
@@ -253,7 +263,8 @@ namespace Blazored.Video
 					EmptiedEvent.InvokeAsync(videoData.State);
 					break;
 				case VideoEvents.Ended:
-					Ended?.Invoke(videoData.State);
+					if (Ended.HasDelegate)
+						Ended.InvokeAsync(videoData.State);
 					EndedEvent.InvokeAsync(videoData.State);
 					break;
 				case VideoEvents.Error:
