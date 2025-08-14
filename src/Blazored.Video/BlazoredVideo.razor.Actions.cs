@@ -46,7 +46,7 @@ namespace Blazored.Video
 		/// Fires when the current playlist is ended
 		/// </summary>
 		/// <remarks>Will not call StateHasChanged() on the Action target.</remarks>
-		[Parameter] public Action<VideoState> Ended { get; set; }
+		[Parameter] public EventCallback<VideoState> Ended { get; set; }
 		/// <summary>
 		/// Fires when an error occurred during the loading of an audio/video
 		/// </summary>
@@ -134,7 +134,7 @@ namespace Blazored.Video
 		bool CanPlayThroughRequired => CanPlayThrough is object;
 		bool DurationChangeRequired => DurationChange is object;
 		bool EmptiedRequired => Emptied is object;
-		bool EndedRequired => Ended is object;
+		bool EndedRequired => Ended.HasDelegate;
 		bool ErrorRequired => Error is object;
 		bool LoadedDataRequired => LoadedData is object;
 		bool LoadedMetadataRequired => LoadedMetadata is object;
